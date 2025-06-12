@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cyber Attack Counter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #ff0066;
+      text-align: center;
+      padding-top: 100px;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 30px;
+    }
+
+    #counter {
+      font-size: 4em;
+      font-weight: bold;
+      display: none;
+    }
+
+    #loader {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 6px solid #ff66aa;
+      border-top: 6px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .counter-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cyber Attacks Today</h1>
+
+  <div class="counter-wrapper">
+    <div id="loader"></div>
+    <div id="counter">0</div>
+  </div>
+
+  <script>
+    let count = 0;
+    let currentDay = new Date().getDate();
+
+    const loaderEl = document.getElementById("loader");
+    const counterEl = document.getElementById("counter");
+
+    const eventSource = new EventSource("http://localhost:3000/cyberfeed");
+    let firstEventReceived = false;
+
+    eventSource.addEventListener("attack", function(event) {
+      const today = new Date().getDate();
+      if (today !== currentDay) {
+        count = 0;
+        currentDay = today;
+      }
+
+      try {
+        const data = JSON.parse(event.data);
+        if (data.a_n) {
+          count++;
+
+          // Show counter, hide loader on first event
+          if (!firstEventReceived) {
+            loaderEl.style.display = "none";
+            counterEl.style.display = "block";
+            firstEventReceived = true;
+          }
+
+          counterEl.textContent = count.toLocaleString();
+        }
+      } catch (err) {
+        console.error("Error parsing event data:", err);
+      }
+    });
+  </script>
+</body>
+</html>
